@@ -28,8 +28,10 @@ BST& BST::operator=(BST&& other) noexcept
 {
 }
 
+
 void BST::printSchedule()
 {
+	printInOrder(root);
 }
 
 void BST::insert(int landingTime)
@@ -51,8 +53,9 @@ int BST::nextAvailable(int requestedTime)
 
 Node* BST::printInOrder(Node* rootNode)
 {
+	if (rootNode == nullptr) return nullptr;
 	printInOrder(rootNode->left);
-	cout << rootNode << endl;
+	rootNode->printTime();
 	printInOrder(rootNode->right);
 }
 
@@ -61,12 +64,43 @@ Node* BST::addNode(Node* rootNode, int addTime)
 	//Check if adding the first node
 	if (!root)
 	{
-		if (Node* temp = new Node(addTime)) root = temp;
+		/*The nothrow argument with the new operator prevents
+		 *an error from being thrown if memory allocation fails
+		 *Instead, it sets the pointer to nullptr*/
+		if (Node* temp = new (nothrow) Node(addTime)) root = temp;
 		else cout << "Memory could not be allocated!" << endl;
 		return nullptr;
-	} 
+	}
 	//Go left if smaller
+	if (rootNode->time > addTime)
+	{
+		if (!rootNode->left)
+		{
+			if(Node* temp = new (nothrow) Node(addTime))
+			{
+				rootNode->left = temp;
+				return temp;
+			}
+			cout << "Memory could not be allocated!" << endl;
+		}
+		else addNode(rootNode->left, addTime);
+	}
+		
 	//Go right if larger
+	if (rootNode->time < addTime)
+	{
+		if (!rootNode->right)
+		{
+			if (Node* temp = new (nothrow) Node(addTime)) {
+				rootNode->right = temp;
+				return temp;
+			}
+			cout << "Memory could not be allocated!" << endl;
+		}
+		else addNode(rootNode->right, addTime);
+	}
+		
+
 }
 
 Node* BST::removeNode(Node* root, int removeTime)
