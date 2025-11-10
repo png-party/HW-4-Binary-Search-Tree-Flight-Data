@@ -17,6 +17,7 @@ struct Node
 		time = getHours(landingTime) * 100 + getMinutes(landingTime);
 		left = nullptr;
 		right = nullptr;
+		if (time != landingTime) cout << "Time adjusted from " << landingTime << " to " << time << endl;
 	}
 
 	/* Prevent setting nodes with invalid times
@@ -121,16 +122,19 @@ public:
 	BST& operator=(BST&& other) noexcept;
 
 	void printSchedule();
-	void insert(int landingTime);
+	bool insert(int landingTime);
 	bool remove(int landingTime);
 	bool search(int landingTime) const;
+	void clearData();
 	int nextAvailable(int requestedTime);
 
 private:
-	Node* printInOrder(Node* root);
+	Node* getSmallest(Node* rootNode) const;
+	Node* printInOrder(Node* rootNode);
 	Node* addNode(Node* root, int addTime);
-	Node* removeNode(Node* root, int removeTime);
-	Node* destroyTree(Node* root);
+	Node* removeNode(Node* current, int removeValue);
+	Node* copyAll(const Node* otherRoot);
+	void destroyTree(Node* rootNode);
 
 };
 
