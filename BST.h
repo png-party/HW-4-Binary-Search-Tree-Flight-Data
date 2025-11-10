@@ -5,6 +5,7 @@
 #include <iostream>
 #include <ostream>
 #include <string>
+#include <vector>
 using namespace std;
 struct Node
 {
@@ -37,6 +38,16 @@ struct Node
 	/*Prints the node's time and pads numbers with zeroes
 	 * It doesn't use getHours() or getMinutes() since it doesn't
 	 * need to validate the time if the node was already created */
+	string getTimeString() const
+	{
+		int hours = getHours(time);
+		int minutes = getMinutes(time);
+
+		string padHours = (hours < 10) ? "0" : "";
+		string padMinutes = (minutes < 10) ? "0" : "";
+		return padHours + to_string(hours) + ":" + padMinutes + to_string(minutes);
+		//cout << "Landing Time: " << padHours << hours << ":" << padMinutes << minutes << endl;
+	}
 	void printTime() const
 	{
 		int temp = time;
@@ -56,22 +67,27 @@ struct Node
 
 		cout << "Landing Time: " << padHours << hours << ":" << padMinutes << minutes << endl;
 	}
-
-	/*Overloaded stream insertion operators for Node objects and pointers */
-	
-	ostream& operator<<(ostream out, const Node* other) const
+	void printBasicTime(ostream& out) const
 	{
-		other->printTime();
-		return out;
+		int temp = time;
+
+		int minutes = temp % 10;
+		temp /= 10;
+		minutes += (temp % 10) * 10;
+		temp /= 10;
+
+
+		int hours = temp % 10;
+		temp /= 10;
+		if (temp > 0) hours += temp % 10 * 10;
+
+		string padHours = (hours < 10) ? "0" : "";
+		string padMinutes = (minutes < 10) ? "0" : "";
+
+		out << padHours << hours << ":" << padMinutes << minutes;
 	}
 
-	ostream& operator<<(ostream out, const Node other) const
-	{
-		other.printTime();
-		return out;
-	} 
 
-private:
 	/*Helper methods for validating hours and minutes*/
 	 static int getMinutes(int landingTime)
 	{
@@ -102,12 +118,26 @@ private:
 		return (hours > 23) ? 23 : hours;
 	}
 };
+/*Overloaded stream insertion operators for Node objects and pointers */
+
+inline ostream& operator<<(ostream& out, const Node* other)
+{
+	other->printBasicTime(out);
+	return out;
+}
+
+inline ostream& operator<<(ostream& out, const Node& other)
+{
+	other.printBasicTime(out);
+	return out;
+} 
 class BST
 {
-	Node* root;
-	int noe;
+
 
 public:
+	Node* root;
+	int noe;
 	BST();
 	/*==The Big 5==*/
 	//Destructor
@@ -121,21 +151,23 @@ public:
 	//Move operator
 	BST& operator=(BST&& other) noexcept;
 
-	void printSchedule();
+	void printSchedule() const;
 	bool insert(int landingTime);
 	bool remove(int landingTime);
 	bool search(int landingTime) const;
 	void clearData();
 	int nextAvailable(int requestedTime);
 
-private:
+//private:
 	Node* getSmallest(Node* rootNode) const;
-	Node* printInOrder(Node* rootNode);
+	Node* printInOrder(Node* rootNode) const;
 	Node* addNode(Node* root, int addTime);
 	Node* removeNode(Node* current, int removeValue);
 	Node* copyAll(const Node* otherRoot);
 	void destroyTree(Node* rootNode);
-
+	void levelOrderRec(Node* root2, int level, vector<vector<string>>& res);
+	vector<vector<string>> levelOrder(Node* root2);
+	void printLevel();
 };
 
 #endif
