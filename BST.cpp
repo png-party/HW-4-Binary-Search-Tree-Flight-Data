@@ -64,7 +64,8 @@ void BST::printSchedule() const
 {
 	cout << "\n===Scheduled Flight Times===" << endl;
 	printInOrder(root);
-	cout << "Total: " << noe << endl;
+	cout << "============================" << endl;
+	cout << "Total Flights: " << noe << endl;
 	cout << "============================" << endl;
 
 }
@@ -76,7 +77,7 @@ void BST::printSchedule() const
  * were unsuccessful */
 bool BST::insert(int landingTime)
 {
-	cout << "\nAdding landing time..." << endl;
+	cout << "\nAdding landing time \"" << landingTime << "\"..." << endl;
 	return addNode(root, landingTime);
 }
 
@@ -89,7 +90,11 @@ Node* BST::remove(int landingTime)
 
 bool BST::search(int landingTime) const
 {
-	return true;
+	cout << "\nSearching for landing time \"" << landingTime << "\"..." << endl;
+	Node* found = getNode(root, landingTime);
+	if (found) cout << "Time "<< found << " was successfully found!" << endl;
+	else cout << "Time << " << landingTime << " was not found" << endl;
+	return found;
 }
 
 void BST::clearData()
@@ -100,7 +105,21 @@ void BST::clearData()
 
 int BST::nextAvailable(int requestedTime)
 {
-	return requestedTime;
+	if (requestedTime == 0) requestedTime = 2359;
+	//Prevent negative values
+	requestedTime = abs(requestedTime);
+
+	if (requestedTime >= 2359 / 2) return Node::verifyTime(requestedTime - 5);
+	if (requestedTime <= 2359 / 2) return Node::verifyTime(requestedTime + 5);
+	//return requestedTime;
+}
+
+Node* BST::getNode(Node* rootNode, int toFind) const
+{
+	if (!rootNode) return nullptr;
+	if (toFind == rootNode->time) return rootNode;
+	if (toFind > rootNode->time) getNode(rootNode->right, toFind);
+	if (toFind < rootNode->time) getNode(rootNode->left, toFind);
 }
 
 Node* BST::getSmallest(Node* rootNode) const
@@ -113,13 +132,14 @@ Node* BST::printInOrder(Node* rootNode) const
 {
 	if (!rootNode) return nullptr;
 	printInOrder(rootNode->left);
-	cout << rootNode->time << endl; 
-	rootNode->printTime();
+	cout << "Landing time: " << rootNode->getTimeString() << ", " << rootNode->time << endl;
+	//rootNode->printTime();
 	printInOrder(rootNode->right);
 }
 
 Node* BST::addNode(Node* rootNode, int addTime)
 {
+	cout << "running insertion for " << addTime << endl;
 	//Check if adding the first node
 	if (!root)
 	{
@@ -135,40 +155,72 @@ Node* BST::addNode(Node* rootNode, int addTime)
 		cout << "==>Error: Memory could not be allocated!" << endl;
 		return nullptr;
 	}
+
+	if (!rootNode) return nullptr;
 	//Go left if addTime is smaller
 	if (rootNode->time > addTime)
 	{
-		if (!rootNode->left)
+		if (!rootNode->left) //Insert the node here if empty
 		{
-			if(Node* temp = new (nothrow) Node(addTime))
+			//Detect collisions
+			if (rootNode->time - addTime >= 5)
 			{
-				cout << "Root node: " << rootNode << endl;
-				rootNode->left = temp;
-				cout << rootNode << "'s left " << rootNode->left << endl;
-				cout << "==>Time added successfully" << endl;
-				noe++;
-				return temp;
+				if (Node* temp = new (nothrow) Node(addTime))
+				{
+					cout << "Root node: " << rootNode << endl;
+					rootNode->left = temp;
+					cout << rootNode << "'s left " << rootNode->left << endl;
+					cout << "==>Time added successfully" << endl;
+					noe++;
+					return temp;
+				} 
+				cout << "==>Error: Memory could not be allocated!" << endl;
+				return nullptr;
 			}
-			cout << "==>Error: Memory could not be allocated!" << endl;
-			return nullptr;
-			
+		
+				cout << "\nLeft insertion: " << rootNode->time << " - " << addTime << " <= 5" << endl;
+				cout << "Collision detected with adding " << addTime << "... searching for new slot" << endl;
+				addTime = nextAvailable(addTime);
+				cout << "trying new time : " << addTime << "\n" << endl;
+				addNode(root, addTime);
 		}
 		addNode(rootNode->left, addTime);
 	}
 	//Go right if larger
+	//Go left if addTime is smaller
+	/*if (rootNode->time > addTime)
 	{
-		if (!rootNode->right)
+		rootNode->left = return addNode(rootNode, addTime);
+	}
+	rootNode->left = return addNode(rootNode, addTime);
+	rootNode->right = return addNode(rootNode, addTime);*/
+	if (rootNode->time < addTime) {
+		if (!rootNode->right) //Insert node here if empty
 		{
-			if (Node* temp = new (nothrow) Node(addTime)) {
-				cout << "Root node: " << rootNode << endl;
-				rootNode->right = temp;
-				cout << rootNode << "'s right " << rootNode->right << endl;
-				cout << "==>Time added successfully" << endl;
-				noe++;
-				return temp;
+			//Detect collisions
+			if (addTime - rootNode->time <= 5)
+			{
+				cout << "\nRight insertion: " << addTime << " - " << rootNode << " <= 5" << endl;
+				cout << "Collision detected with adding " << addTime << "... searching for new slot" << endl;
+				
+				addTime = nextAvailable(addTime);
+				cout << "trying new time : " << addTime  << "\n" << endl;
+				addNode(root, addTime);
 			}
-			cout << "Memory could not be allocated!" << endl;
-			return nullptr;
+			else //Insert if no collision
+			{
+				if (Node* temp = new (nothrow) Node(addTime))
+				{
+					cout << "Root node: " << rootNode << endl;
+					rootNode->right = temp;
+					cout << rootNode << "'s right " << rootNode->right << endl;
+					cout << "==>Time added successfully" << endl;
+					noe++;
+					return temp;
+				}
+				cout << "Memory could not be allocated!" << endl;
+				return nullptr;
+			}
 		}
 		addNode(rootNode->right, addTime);
 	}
@@ -179,7 +231,7 @@ Node* BST::removeNode(Node* current, int removeValue)
 	/* Base Case */
 	if (!current)
 	{
-		cout << "==>The specified time was not found!" << endl;
+		cout << "==>The specified time could not be found and removed" << endl;
 		return nullptr;
 	}
 

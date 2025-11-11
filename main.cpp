@@ -24,7 +24,18 @@ int main()
 	x.insert(14);
 	x.insert(555);
 	x.insert(10);
-	//x.printSchedule();
+	x.insert(0);
+	x.insert(2);
+	x.insert(3);
+	x.printSchedule();
+	x.search(0);
+	Node* f = x.getNode(x.root, 0);
+	cout << f << endl;
+	//cout << f->left << ", " << f << ", " << f->right << endl;
+	cout << f->left << endl;
+	cout << f->right << endl;
+	x.printLevel();
+
 	BST y = BST(x);
  //y.printSchedule();
 	//cout << y.root << endl;
