@@ -177,14 +177,14 @@ Node* BST::addNode(Node* rootNode, int addTime)
 				cout << "==>Error: Memory could not be allocated!" << endl;
 				return nullptr;
 			}
-		
-				cout << "\nLeft insertion: " << rootNode->time << " - " << addTime << " <= 5" << endl;
-				cout << "Collision detected with adding " << addTime << "... searching for new slot" << endl;
-				addTime = nextAvailable(addTime);
-				cout << "trying new time : " << addTime << "\n" << endl;
-				addNode(root, addTime);
+			cout << "\nLeft insertion: " << rootNode->time << " - " << addTime << " <= 5" << endl;
+			cout << "Collision detected with adding " << addTime << "... searching for new slot" << endl;
+			addTime = nextAvailable(addTime);
+			cout << "trying new time : " << addTime << "\n" << endl;
+			rootNode = root;
+			return addNode(root, addTime);
 		}
-		addNode(rootNode->left, addTime);
+		else addNode(rootNode->left, addTime);
 	}
 	//Go right if larger
 	//Go left if addTime is smaller
@@ -194,20 +194,11 @@ Node* BST::addNode(Node* rootNode, int addTime)
 	}
 	rootNode->left = return addNode(rootNode, addTime);
 	rootNode->right = return addNode(rootNode, addTime);*/
-	if (rootNode->time < addTime) {
+	if (rootNode->time < addTime ) {
 		if (!rootNode->right) //Insert node here if empty
 		{
 			//Detect collisions
-			if (addTime - rootNode->time <= 5)
-			{
-				cout << "\nRight insertion: " << addTime << " - " << rootNode << " <= 5" << endl;
-				cout << "Collision detected with adding " << addTime << "... searching for new slot" << endl;
-				
-				addTime = nextAvailable(addTime);
-				cout << "trying new time : " << addTime  << "\n" << endl;
-				addNode(root, addTime);
-			}
-			else //Insert if no collision
+			if (addTime - rootNode->time >= 5)
 			{
 				if (Node* temp = new (nothrow) Node(addTime))
 				{
@@ -220,9 +211,21 @@ Node* BST::addNode(Node* rootNode, int addTime)
 				}
 				cout << "Memory could not be allocated!" << endl;
 				return nullptr;
+
+				
+			}
+			else //Insert if no collision
+			{
+				cout << "\nRight insertion: " << addTime << " - " << rootNode << " <= 5" << endl;
+				cout << "Collision detected with adding " << addTime << "... searching for new slot" << endl;
+
+				addTime = nextAvailable(addTime);
+				cout << "trying new time : " << addTime << "\n" << endl;
+				//rootNode = root;
+				return addNode(root, addTime);
 			}
 		}
-		addNode(rootNode->right, addTime);
+		else addNode(rootNode->right, addTime);
 	}
 }
 
