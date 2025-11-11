@@ -80,14 +80,11 @@ bool BST::insert(int landingTime)
 	return addNode(root, landingTime);
 }
 
-bool BST::remove(int landingTime)
+Node* BST::remove(int landingTime)
 {
 	cout << "\nRemoving landing time \"" << landingTime <<"\"..." << endl;
-	Node* x = removeNode(root, landingTime);
-	cout << "Remove method returned: " << &x << endl;
-	cout << "Remove method returned: " << x << endl;
-	cout << "Remove method returned: " << x->time << endl;
-	return x;
+	cout << removeNode(root, landingTime) << endl;
+	return nullptr;
 }
 
 bool BST::search(int landingTime) const
@@ -110,20 +107,6 @@ Node* BST::getSmallest(Node* rootNode) const
 {
 	if (rootNode->left != nullptr) return getSmallest(rootNode->left);
 	return rootNode;
-	/*
-	if (rootNode->left == nullptr)
-	{
-		cout << "current node " << rootNode << " has no left" << endl;
-		return rootNode;
-	}
-	if (rootNode->left) {
-		cout << "current:" << rootNode << endl;
-		cout << "passing in " << rootNode->left << endl;
-		getSmallest(rootNode->left);
-	}*/
-		
-	
-	//return rootNode;
 }
 
 Node* BST::printInOrder(Node* rootNode) const
@@ -140,9 +123,9 @@ Node* BST::addNode(Node* rootNode, int addTime)
 	//Check if adding the first node
 	if (!root)
 	{
-		/*The nothrow argument with the new operator prevents
-		 *an error from being thrown if memory allocation fails
-		 *Instead, it sets the pointer to nullptr*/
+		/* The nothrow argument with the new operator prevents
+		 * an error from being thrown if memory allocation fails
+		 * Instead, it sets the pointer to nullptr  */
 		if (Node* temp = new (nothrow) Node(addTime)) {
 			root = temp;
 			noe = 1;
@@ -172,9 +155,7 @@ Node* BST::addNode(Node* rootNode, int addTime)
 		}
 		addNode(rootNode->left, addTime);
 	}
-		
 	//Go right if larger
-	if (rootNode->time < addTime)
 	{
 		if (!rootNode->right)
 		{
@@ -195,40 +176,43 @@ Node* BST::addNode(Node* rootNode, int addTime)
 
 Node* BST::removeNode(Node* current, int removeValue)
 {
-	if (!current) return nullptr;
+	/* Base Case */
+	if (!current)
+	{
+		cout << "==>The specified time was not found!" << endl;
+		return nullptr;
+	}
+
 	/* Case 1: Tree is empty */
 	if (!root)
 	{
 		cout << "==>The tree is empty, nothing to remove" << endl;
 		return nullptr;
 	}
-	cout << "tree is not empty" << endl;
 
 	/* Case 2: RemoveValue is stored in the root */
 	if (root->time == removeValue)
 	{
 		cout << "RemoveValue is stored in the root" << endl;
 		Node* toDelete = root;
+
 		/* Case 2A: Root contains a right child (and maybe a left child) */
 		if (Node* rightChild = toDelete->right)
 		{
-			cout << "Root contains a right child (and maybe a left child)" << endl;
-			cout << "Right child of toDelete: " << rightChild << endl;
-			cout << "left of right child: " << rightChild->left << endl;
 			//If there is also a left child, attach it to rightChild's leftmost node
 			if (Node* leftChild = toDelete->left) {
 				
 				Node* smallest = getSmallest(rightChild);
-				cout << "Smallest node on the right is " << smallest << endl;
 				smallest->left = leftChild;
-				cout << smallest  << "'s left is now " << leftChild << endl;
 			}
+			//Make right the new root
 			root = rightChild;
 		}
+
 		/* Case 2B: Root only contains a left child */
-		else if (!root->right && root->left)
+		else if (root->left)
 		{
-			cout << "Root only contains a left child" << endl;
+			//Make left the new root
 			root = root->left;
 		}
 		cout << "==>The specified time was successfully removed, root node updated" << endl;
@@ -236,34 +220,14 @@ Node* BST::removeNode(Node* current, int removeValue)
 		delete toDelete;
 		return root;
 	}
-	cout << "removeValue is not in the root" << endl;
-	/* Case 3: Node wasn't found 
-	if (!current->left || !current->right)
-	{
-		cout << current << "doesnt have children" << endl;
-		return nullptr;
-	} */
-	//if (!current->left || !current->right) return nullptr;!
-	/* Case 3: removeValue is stored in a left node
-	 * Check the current node's left and right children for removeValue */
-	if (current->left && current->left->time == removeValue)
-	{
-		cout << "removeValue is stored in a left node" << endl;
-		Node* toDelete = current->left;
-		cout << toDelete << endl;
 
-		/* Case 3A: toDelete is a leaf node,
-		 * preemptively set current's left to nullptr
-		 * to prevent dangling pointers after deleting */
-		current->left = nullptr;
-
-		/* Check if toDelete has children before destroying it
-		 * Case 3B: Contains a right child (and maybe a left child) */
+	/* Case 3: Current node contains removeValue */
+	if (current->time == removeValue)
+	{
+		Node* toDelete = current;
+		/* Case 3A: Contains right child (and maybe left) */
 		if (Node* rightChild = toDelete->right)
 		{
-			cout << "Contains a right child (and maybe a left child) " << endl;
-			cout << "Right child of toDelete: " << rightChild << endl;
-			//If there is also a left child, attach it to rightChild's leftmost node
 			if (Node* leftChild = toDelete->left)
 			{
 				Node* smallest = getSmallest(rightChild);
@@ -271,78 +235,30 @@ Node* BST::removeNode(Node* current, int removeValue)
 				smallest->left = leftChild;
 				cout << smallest << "'s left is now " << leftChild << endl;
 			}
+			current = rightChild;
+		}
+		/* Case 3B: Only contains a left child */
+		else if (Node* leftChild = toDelete->left) current = leftChild;
+		/* Case 3C: Current is a leaf so we set it to nullptr */
+		else current = nullptr;
 
-			//Attach the subtree onto the left of the current node
-			current->left = rightChild;
-		}
-		/* Case 3C: only contains a left child */
-		else if (!toDelete->right && toDelete->left)
-		{
-			cout << "only contains a left child" << endl;
-			//Get the left child
-			Node* leftChild = toDelete->left;
-			//Attach the node/subtree onto the left of the current node
-			current->left = leftChild;
-		}
-		cout << "==>The specified time was successfully removed!" << endl;
 		noe--;
 		delete toDelete;
 		return current;
 	}
-
-	/* Case 4: removeValue is stored in a right node */
-	if (current->right && current->right->time == removeValue) 
+	
+	//Go left if removeValue is smaller than current
+	if (removeValue < current->time)
 	{
-		cout << "removeValue is stored in a right node" << endl;
-		Node* toDelete = current->right;
-		/* Case 4A: toDelete is a leaf node,
-		 * preemptively set current's right to nullptr
-		 * to prevent dangling pointers after deleting */
-		current->right = nullptr;
-
-		/* Check if toDelete has children before destroying it
-		 * Case 4B: Contains a right child (and maybe a left child) */
-		if (Node* rightChild = toDelete->right)
-		{
-			cout << " Contains a right child (and maybe a left child) " << endl;
-			//If there is also a left child, attach below to rightChild's leftmost node
-			if (Node* leftChild = toDelete->left) {
-				Node* smallest = getSmallest(rightChild);
-				smallest->left = leftChild;
-			}
-			//Attach toDelete's rightChild to current's right
-			current->right = rightChild;
-		}
-		/* Case 4C: Only contains a left child*/
-		else if (!toDelete->right && toDelete->left)
-		{
-			cout << " Only contains a left child" << endl;
-			//toDelete's left child will now be used as current's right
-			Node* leftChild = toDelete->left;
-			//Attach toDelete's leftChild to current's right
-			current->right = leftChild;
-		}
-		//Finally, remove the node
-		cout << "==>The specified time was successfully removed!" << endl;
-		noe--;
-		delete toDelete;
+		current->left = removeNode(current->left, removeValue);
 		return current;
 	}
-	//Go left if current time is larger than target 
-	if (current->time > removeValue)
-	{
-		cout << current->time << " > " << removeValue << " going left" << endl;
-		removeNode(current->left, removeValue);
-	}
 
-	//Go right if current time is smaller than target
-	if (current->time < removeValue) {
-			cout << current->time << " < " << removeValue << " going right" << endl;
-			removeNode(current->right, removeValue);
+	//Go right if removeValue is larger than current
+	if (removeValue > current->time) {
+		current->right = removeNode(current->right, removeValue);
+		return current;
 	}
-	cout << "!!!!!!!!!!Node wasn't found" << endl;
-	cout << current << endl;
-	//return nullptr;
 }
 
 Node* BST::copyAll(const Node* otherRoot)

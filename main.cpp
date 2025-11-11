@@ -1,4 +1,6 @@
-/*https://www.geeksforgeeks.org/cpp/if-memory-allocation-using-new-is-failed-in-c-then-how-it-should-be-handled/*/
+/*https://www.geeksforgeeks.org/cpp/if-memory-allocation-using-new-is-failed-in-c-then-how-it-should-be-handled/
+ * https://www.geeksforgeeks.org/cpp/how-to-generate-random-number-in-range-in-cpp/
+ */
 #include <iostream>
 #include "BST.h"
 using namespace std;
