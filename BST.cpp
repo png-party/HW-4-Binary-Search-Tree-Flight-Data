@@ -78,7 +78,9 @@ void BST::printSchedule() const
 bool BST::insert(int landingTime)
 {
 	cout << "\nAdding landing time \"" << landingTime << "\"..." << endl;
-	return addNode(root, landingTime);
+	int checkedTime = Node::verifyTime(landingTime);
+	if (checkedTime != landingTime) cout << "==>Invalid time adjusted from " << landingTime << " to " << checkedTime << endl;
+	return addNode(root, checkedTime);
 }
 
 Node* BST::remove(int landingTime)
@@ -103,12 +105,9 @@ void BST::clearData()
 	noe = 0;
 }
 
-int BST::nextAvailable(int requestedTime)
+int BST::nextAvailable(int requestedTime) const
 {
 	if (requestedTime == 0) requestedTime = 2359;
-	//Prevent negative values
-	requestedTime = abs(requestedTime);
-
 	if (requestedTime >= 2359 / 2) return Node::verifyTime(requestedTime - 5);
 	if (requestedTime <= 2359 / 2) return Node::verifyTime(requestedTime + 5);
 	//return requestedTime;
@@ -132,14 +131,12 @@ Node* BST::printInOrder(Node* rootNode) const
 {
 	if (!rootNode) return nullptr;
 	printInOrder(rootNode->left);
-	cout << "Landing time: " << rootNode->getTimeString() << ", " << rootNode->time << endl;
-	//rootNode->printTime();
+	rootNode->printTime();
 	printInOrder(rootNode->right);
 }
 
 Node* BST::addNode(Node* rootNode, int addTime)
 {
-	cout << "running insertion for " << addTime << endl;
 	//Check if adding the first node
 	if (!root)
 	{
@@ -149,84 +146,61 @@ Node* BST::addNode(Node* rootNode, int addTime)
 		if (Node* temp = new (nothrow) Node(addTime)) {
 			root = temp;
 			noe = 1;
-			cout << "==>Time added successfully, root created" << endl;
+			cout << "==>Flight booked successfully, root created" << endl;
 			return root;
 		}
 		cout << "==>Error: Memory could not be allocated!" << endl;
 		return nullptr;
 	}
-
 	if (!rootNode) return nullptr;
-	//Go left if addTime is smaller
-	if (rootNode->time > addTime)
+
+	int count = noe;
+	while (count >= 0)
 	{
-		if (!rootNode->left) //Insert the node here if empty
+		if (std::abs(addTime - rootNode->time) <= 5 || rootNode->time == addTime)
 		{
-			//Detect collisions
-			if (rootNode->time - addTime >= 5)
-			{
-				if (Node* temp = new (nothrow) Node(addTime))
-				{
-					cout << "Root node: " << rootNode << endl;
-					rootNode->left = temp;
-					cout << rootNode << "'s left " << rootNode->left << endl;
-					cout << "==>Time added successfully" << endl;
-					noe++;
-					return temp;
-				} 
-				cout << "==>Error: Memory could not be allocated!" << endl;
-				return nullptr;
-			}
-			cout << "\nLeft insertion: " << rootNode->time << " - " << addTime << " <= 5" << endl;
-			cout << "Collision detected with adding " << addTime << "... searching for new slot" << endl;
-			addTime = nextAvailable(addTime);
-			cout << "trying new time : " << addTime << "\n" << endl;
+			cout << "==>Flight collision detected! " << addTime << " is within 5 minutes of another flight at " << rootNode << endl;
+			int offset = nextAvailable(addTime);
 			rootNode = root;
-			return addNode(root, addTime);
+			cout << "Attempting to book " << offset << " instead...\n" << endl;
+			return addNode(rootNode, offset);
+		} 
+		if (rootNode->time > addTime) {
+			if (!rootNode->left) break;
+			rootNode = rootNode->left;
 		}
-		else addNode(rootNode->left, addTime);
+		else if (rootNode->time < addTime) {
+			if (!rootNode->right) break;
+			rootNode = rootNode->right;
+		}
+	
+		count--;
 	}
-	//Go right if larger
-	//Go left if addTime is smaller
-	/*if (rootNode->time > addTime)
+	if (std::abs(addTime - rootNode->time) > 5)
 	{
-		rootNode->left = return addNode(rootNode, addTime);
-	}
-	rootNode->left = return addNode(rootNode, addTime);
-	rootNode->right = return addNode(rootNode, addTime);*/
-	if (rootNode->time < addTime ) {
-		if (!rootNode->right) //Insert node here if empty
+		if (Node* temp = new (nothrow) Node(addTime))
 		{
-			//Detect collisions
-			if (addTime - rootNode->time >= 5)
-			{
-				if (Node* temp = new (nothrow) Node(addTime))
-				{
-					cout << "Root node: " << rootNode << endl;
-					rootNode->right = temp;
-					cout << rootNode << "'s right " << rootNode->right << endl;
-					cout << "==>Time added successfully" << endl;
-					noe++;
-					return temp;
-				}
-				cout << "Memory could not be allocated!" << endl;
-				return nullptr;
-
-				
-			}
-			else //Insert if no collision
-			{
-				cout << "\nRight insertion: " << addTime << " - " << rootNode << " <= 5" << endl;
-				cout << "Collision detected with adding " << addTime << "... searching for new slot" << endl;
-
-				addTime = nextAvailable(addTime);
-				cout << "trying new time : " << addTime << "\n" << endl;
-				//rootNode = root;
-				return addNode(root, addTime);
-			}
+			cout << "Root node: " << rootNode << endl;
+			if (rootNode->time > addTime) rootNode->left = temp;
+			else rootNode->right = temp;
+			cout << "==>Flight time " << temp << " booked successfully" << endl;
+			noe++;
+			return temp;
 		}
-		else addNode(rootNode->right, addTime);
+		cout << "==>Error: Memory could not be allocated!" << endl;
+		return nullptr;
 	}
+	/*
+	if (std::abs(addTime - rootNode->time) <= 5)
+	{
+		cout << "\nInsertion: " << addTime << " - " << rootNode << " <= 5" << endl;
+		cout << "Collision detected with adding " << addTime << "... searching for new slot" << endl;
+		int offset = nextAvailable(addTime);
+		rootNode = root;
+		cout << "trying new time : " << offset << "\n" << endl;
+		return addNode(rootNode, offset);
+	} */
+	return nullptr;
 }
 
 Node* BST::removeNode(Node* current, int removeValue)
@@ -338,11 +312,15 @@ void BST::destroyTree(Node* root)
 
 void BST::levelOrderRec(Node* root2, int level, vector<vector<string>>& res) {
 	// Base case
-	if (root2 == nullptr) return;
 
 	// Add a new level to the result if needed
 	if (res.size() <= level)
 		res.push_back({});
+	if (root2 == nullptr)
+	{
+		res[level].push_back("Xx:xX");
+		return;
+	}
 
 	// Add current node's data to its corresponding level
 	res[level].push_back(root2->getTimeString());
@@ -373,10 +351,10 @@ void BST::printLevel()
 				for (string val : res[i]) {
 					if (i !=0)
 					{
-						string s2((res[i-1].size()), ' ');
-						cout << val << s2;
+						//string s2((res[i-1].size()), ' ');
+						cout << val << "  ";
 					}
-					else cout << val << "  ";
+					else cout << val << "";
 				}
 				cout << endl;
 			

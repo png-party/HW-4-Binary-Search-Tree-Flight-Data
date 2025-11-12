@@ -16,10 +16,10 @@ struct Node
 
 	Node(int landingTime)
 	{
-		time = verifyTime(landingTime);
+		time = landingTime;
 		left = nullptr;
 		right = nullptr;
-		if (time != landingTime) cout << "Time adjusted from " << landingTime << " to " << time << endl;
+		//if (time != landingTime) cout << "Time adjusted from " << landingTime << " to " << time << endl;
 	}
 
 	/* Prevent setting nodes with invalid times
@@ -131,7 +131,7 @@ public:
 	Node* remove(int landingTime);
 	bool search(int landingTime) const;
 	void clearData();
-	int nextAvailable(int requestedTime);
+	int nextAvailable(int requestedTime) const;
 
 //private:
 	Node* getNode(Node* rootNode, int toFind) const;
