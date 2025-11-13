@@ -19,7 +19,6 @@ struct Node
 		time = landingTime;
 		left = nullptr;
 		right = nullptr;
-		//if (time != landingTime) cout << "Time adjusted from " << landingTime << " to " << time << endl;
 	}
 
 	/* Prevent setting nodes with invalid times
@@ -92,7 +91,7 @@ struct Node
 	}
 };
 
-/*Overloaded stream insertion operators for Node objects and pointers */
+/* Overloaded stream insertion operators for Node objects and pointers */
 inline ostream& operator<<(ostream& out, const Node* other)
 {
 	if (!other) out << "Null value" << endl;
@@ -127,17 +126,17 @@ public:
 	BST& operator=(BST&& other) noexcept;
 
 	void printSchedule() const;
-	bool insert(int landingTime);
-	Node* remove(int landingTime);
 	bool search(int landingTime) const;
+	bool insert(int landingTime);
+	bool remove(int landingTime);
 	void clearData();
-	int nextAvailable(int requestedTime) const;
 
 //private:
-	Node* getNode(Node* rootNode, int toFind) const;
-	Node* getSmallest(Node* rootNode) const;
 	Node* printInOrder(Node* rootNode) const;
+	Node* getNode(Node* rootNode, int toFind) const;
+	int nextAvailable(int requestedTime, int collisionTime) const;
 	Node* addNode(Node* rootNode, int addTime);
+	Node* getSmallest(Node* rootNode) const;
 	Node* removeNode(Node* current, int removeValue);
 	Node* copyAll(const Node* otherRoot);
 	void destroyTree(Node* rootNode);

@@ -5,16 +5,9 @@
 #include "BST.h"
 using namespace std;
 
-
-
-
 int main()
 {
-	/*TODO
-	 * Node stream insertion operator helper method needs to return ostream obj
-	 * make bst stuff private
-	 * make node helpers private
-	 */
+
 	BST x = BST();
 	x.insert(500);
 	x.insert(600);
@@ -40,7 +33,15 @@ int main()
 	x.printLevel();
 
 	BST y = BST(x);
- //y.printSchedule();
+
+	BST h = BST();
+	h.insert(10);
+	h.insert(20);
+	h.insert(30);
+	h.insert(40);
+	h.insert(50);
+	h.printLevel();
+		 //y.printSchedule();
 	//cout << y.root << endl;
 //	cout << "test" << endl;
 	
@@ -56,8 +57,8 @@ int main()
 	y.remove(3333);
 	//x.printSchedule();
 	//x.printLevel();
-	//cout << x.root << endl;
-	//cout << x.noe << endl;
+	cout << x.root << endl;
+	cout << x.noe << endl;
 	cout << "Test" << endl;
 	return 0;
 }

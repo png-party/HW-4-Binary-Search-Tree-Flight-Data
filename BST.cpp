@@ -3,6 +3,7 @@
 #include <ios>
 #include <vector>
 using namespace std;
+
 BST::BST()
 {
 	root = nullptr;
@@ -12,7 +13,6 @@ BST::BST()
 BST::~BST()
 {
 	destroyTree(root);
-	
 }
 
 /* Copy constructor */
@@ -31,6 +31,7 @@ BST& BST::operator=(const BST& other)
 		destroyTree(root);
 		noe = other.noe;
 		if (other.root) root = copyAll(other.root);
+		else root = nullptr;
 	}
 	return *this;
 }
@@ -67,7 +68,6 @@ void BST::printSchedule() const
 	cout << "============================" << endl;
 	cout << "Total Flights: " << noe << endl;
 	cout << "============================" << endl;
-
 }
 
 /* The insert and remove methods will return true
@@ -83,11 +83,10 @@ bool BST::insert(int landingTime)
 	return addNode(root, checkedTime);
 }
 
-Node* BST::remove(int landingTime)
+bool BST::remove(int landingTime)
 {
 	cout << "\nRemoving landing time \"" << landingTime <<"\"..." << endl;
-	cout << removeNode(root, landingTime) << endl;
-	return nullptr;
+	return removeNode(root, landingTime);
 }
 
 bool BST::search(int landingTime) const
@@ -103,30 +102,10 @@ void BST::clearData()
 {
 	destroyTree(root);
 	noe = 0;
+	cout << "Clearing all flights..." << endl;
 }
 
-int BST::nextAvailable(int requestedTime) const
-{
-	if (requestedTime == 0) requestedTime = 2359;
-	if (requestedTime >= 2359 / 2) return Node::verifyTime(requestedTime - 5);
-	if (requestedTime <= 2359 / 2) return Node::verifyTime(requestedTime + 5);
-	//return requestedTime;
-}
-
-Node* BST::getNode(Node* rootNode, int toFind) const
-{
-	if (!rootNode) return nullptr;
-	if (toFind == rootNode->time) return rootNode;
-	if (toFind > rootNode->time) getNode(rootNode->right, toFind);
-	if (toFind < rootNode->time) getNode(rootNode->left, toFind);
-}
-
-Node* BST::getSmallest(Node* rootNode) const
-{
-	if (rootNode->left != nullptr) return getSmallest(rootNode->left);
-	return rootNode;
-}
-
+/* Private helper method for printSchedule() */
 Node* BST::printInOrder(Node* rootNode) const
 {
 	if (!rootNode) return nullptr;
@@ -135,6 +114,29 @@ Node* BST::printInOrder(Node* rootNode) const
 	printInOrder(rootNode->right);
 }
 
+/* Private helper method for search() */
+Node* BST::getNode(Node* rootNode, int toFind) const
+{
+	if (!rootNode) return nullptr;
+	if (toFind == rootNode->time) return rootNode;
+	if (toFind > rootNode->time) getNode(rootNode->right, toFind);
+	if (toFind < rootNode->time) getNode(rootNode->left, toFind);
+}
+
+/* Private helper method for insert()
+ * It is called when a collision is detected
+ * It finds the minimum possible time from the collusion node
+ * If the time is before noon, it looks for later time slots
+ * If the time is after noon, it looks for earlier time slots */
+int BST::nextAvailable(int requestedTime, int collisionTime) const
+{
+	if (requestedTime == 0) requestedTime = 2359;
+	int difference = 6 - abs(requestedTime - collisionTime);
+	if (requestedTime <= 2359 / 2) return Node::verifyTime(requestedTime + difference);
+	if (requestedTime >= 2359 / 2) return Node::verifyTime(requestedTime - difference);
+}
+
+/* Private helper method for insert() */
 Node* BST::addNode(Node* rootNode, int addTime)
 {
 	//Check if adding the first node
@@ -154,28 +156,33 @@ Node* BST::addNode(Node* rootNode, int addTime)
 	}
 	if (!rootNode) return nullptr;
 
+	/* Traverse the tree to find a suitable spot to add the node */
 	int count = noe;
 	while (count >= 0)
 	{
-		if (std::abs(addTime - rootNode->time) <= 5 || rootNode->time == addTime)
+		/* Check each node visited for potential collisions */
+		if (std::abs(addTime - rootNode->time) <= 5)
 		{
 			cout << "==>Flight collision detected! " << addTime << " is within 5 minutes of another flight at " << rootNode << endl;
-			int offset = nextAvailable(addTime);
+			/* Select the closest time and start inserting from the root */
+			int offset = nextAvailable(addTime, rootNode->time);
 			rootNode = root;
 			cout << "Attempting to book " << offset << " instead...\n" << endl;
 			return addNode(rootNode, offset);
-		} 
-		if (rootNode->time > addTime) {
+		}
+		// Go left if addTime is smaller than current
+		if (addTime < rootNode->time) {
 			if (!rootNode->left) break;
 			rootNode = rootNode->left;
 		}
-		else if (rootNode->time < addTime) {
+		// Go right if addTime is larger than current
+		else if (addTime > rootNode->time) {
 			if (!rootNode->right) break;
 			rootNode = rootNode->right;
 		}
-	
 		count--;
 	}
+	/* Once a valid spot is found, add the node there */
 	if (std::abs(addTime - rootNode->time) > 5)
 	{
 		if (Node* temp = new (nothrow) Node(addTime))
@@ -190,19 +197,17 @@ Node* BST::addNode(Node* rootNode, int addTime)
 		cout << "==>Error: Memory could not be allocated!" << endl;
 		return nullptr;
 	}
-	/*
-	if (std::abs(addTime - rootNode->time) <= 5)
-	{
-		cout << "\nInsertion: " << addTime << " - " << rootNode << " <= 5" << endl;
-		cout << "Collision detected with adding " << addTime << "... searching for new slot" << endl;
-		int offset = nextAvailable(addTime);
-		rootNode = root;
-		cout << "trying new time : " << offset << "\n" << endl;
-		return addNode(rootNode, offset);
-	} */
 	return nullptr;
 }
 
+/* Private helper method for remove() */
+Node* BST::getSmallest(Node* rootNode) const
+{
+	if (rootNode->left != nullptr) return getSmallest(rootNode->left);
+	return rootNode;
+}
+
+/* Private helper method for remove() */
 Node* BST::removeNode(Node* current, int removeValue)
 {
 	/* Base Case */
@@ -290,6 +295,7 @@ Node* BST::removeNode(Node* current, int removeValue)
 	}
 }
 
+/* Private helper method for the copy constructor and overloaded assignment operator */
 Node* BST::copyAll(const Node* otherRoot)
 {
 	if (!otherRoot) return nullptr;
@@ -299,10 +305,14 @@ Node* BST::copyAll(const Node* otherRoot)
 		copy->right = copyAll(otherRoot->right);
 		return copy;
 	}
+	cout << "==>Error: Memory could not be initialized" << endl;
+	return nullptr;
 }
 
+/* Private helper method for clearData() */
 void BST::destroyTree(Node* root)
 {
+	//Traverse in postOrder
 	if (root == nullptr) return;
 	destroyTree(root->left);
 	destroyTree(root->right);
