@@ -2,8 +2,9 @@
 #include <iostream>
 #include <ios>
 #include <vector>
+#include <numeric>
 using namespace std;
-
+ Node* BST::null = new Node("null value");
 BST::BST()
 {
 	root = nullptr;
@@ -320,20 +321,34 @@ void BST::destroyTree(Node* root)
 	delete root;
 }
 
-void BST::levelOrderRec(Node* root2, int level, vector<vector<string>>& res) {
+void BST::levelOrderRec(Node* root2, int level, vector<vector<Node*>>& res) {
 	// Base case
-
-	// Add a new level to the result if needed
+	//if (!root2) return;
+ 	// Add a new level to the result if needed
+	//cout << "Adding" << endl;
+	if (level > 10) return;
+	/*if (root2)
+	{
+		null->left = root2->left;
+		null->right = root2->right;
+	} */
+	//if (!root2->left) root2->left = null;
+	//if (!root2->left) root2->right = null;
 	if (res.size() <= level)
 		res.push_back({});
-	if (root2 == nullptr)
+	
+	if (!root2)
 	{
-		res[level].push_back("Xx:xX");
+		//ll->left = null;
+		//ll->right = null;
+		cout << "adding null" << endl;
+		cout << null->left << " and " << null->right << endl;
+		res[level].push_back(null);
 		return;
 	}
-
+	else res[level].push_back(root2);
 	// Add current node's data to its corresponding level
-	res[level].push_back(root2->getTimeString());
+	
 
 	// Recur for left and right children
 	levelOrderRec(root2->left, level + 1, res);
@@ -341,10 +356,10 @@ void BST::levelOrderRec(Node* root2, int level, vector<vector<string>>& res) {
 }
 
 // Function to perform level order traversal
-vector<vector<string>> BST::levelOrder(Node* root2) {
+vector<vector<Node*>> BST::levelOrder(Node* root2) {
 
 	// Stores the result level by level
-	vector<vector<string>> res;
+	vector<vector<Node*>> res;
 
 	levelOrderRec(root2, 0, res);
 	return res;
@@ -353,20 +368,48 @@ vector<vector<string>> BST::levelOrder(Node* root2) {
 void BST::printLevel()
 {
 	cout << "\n===========================" << endl;
-	vector<vector<string>> res = levelOrder(root);
-		for (int i = 0; i < (int)res.size(); i++)
-		{
-			string s((res.size() - i)*2 , ' ');
-			cout << s;
-				for (string val : res[i]) {
-					if (i !=0)
-					{
-						//string s2((res[i-1].size()), ' ');
-						cout << val << "  ";
-					}
-					else cout << val << "";
+	vector<vector<Node*>> res = levelOrder(root);
+	int height = (int) res.size() - 1;
+	int maxNodeCount = 0;
+	for (int i = 0; i < height; i++)
+	{
+		maxNodeCount += pow(2, i);
+	}
+	cout << "height: " << height << endl;
+	cout << "Max node count: " << maxNodeCount << endl;
+	for (int i = 0; i < height; i++) {
+
+	//	string spaceString((i + 1), ' ');
+	//	string s((height - i - (int) res[i].size()* (3)), ' ');
+		string s((height - i)*3, ' ');
+			//cout << s.size() << endl;
+				cout << i<< s;
+				string branches = s;
+			for (int k = 0; k < (int) (res[i].size()); k++)
+			{
+				if (!res[i][k] || res[i][k]->time == 9999)
+				{
+					cout << "  ";
+					//branches += "     ";
 				}
-				cout << endl;
+				if (res[i][k]->time != 9999)
+				{
+					cout << res[i][k]->getTimeString() << "  ";
+					if (res[i][k]->left && res[i][k]->left->time != 9999)
+					{
+						branches += " /  ";
+					}
+					else branches += "    ";
+					if (res[i][k]->right &&  res[i][k]->right->time != 9999)
+					{
+						branches += "\\  ";
+					}
+					else branches += "   ";
+				}
+			
+			}
+			
+			cout << "\n" <<branches << endl;
 			
 		}
 		cout << "\n===========================" << endl;

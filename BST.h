@@ -20,7 +20,12 @@ struct Node
 		left = nullptr;
 		right = nullptr;
 	}
-
+	Node(string s)
+	{
+		time = 9999;
+		left = nullptr;
+		right = nullptr;
+	}
 	/* Prevent setting nodes with invalid times
 	 * and will adjust the time as needed 
 	 * Ranges:
@@ -44,6 +49,7 @@ struct Node
 	 * need to round/validate the time if the node was already created */
 	string getTimeString() const
 	{
+		if (time == 9999) return "Xx:xX";
 		int temp = time;
 
 		int minutes = temp % 10;
@@ -110,6 +116,7 @@ class BST
 
 
 public:
+	static Node* null;
 	Node* root;
 	int noe;
 	BST();
@@ -140,8 +147,8 @@ public:
 	Node* removeNode(Node* current, int removeValue);
 	Node* copyAll(const Node* otherRoot);
 	void destroyTree(Node* rootNode);
-	void levelOrderRec(Node* root2, int level, vector<vector<string>>& res);
-	vector<vector<string>> levelOrder(Node* root2);
+	void levelOrderRec(Node* root2, int level, vector<vector<Node*>>& res);
+	vector<vector<Node*>> levelOrder(Node* root2);
 	void printLevel();
 };
 
