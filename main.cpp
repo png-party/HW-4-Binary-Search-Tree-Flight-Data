@@ -1,5 +1,10 @@
-/*https://www.geeksforgeeks.org/cpp/if-memory-allocation-using-new-is-failed-in-c-then-how-it-should-be-handled/
- * https://www.geeksforgeeks.org/cpp/how-to-generate-random-number-in-range-in-cpp/
+/*
+ *	Nicole Sirbu
+ *	CMPR-131
+ *	2025-11-12
+ *	Homework #4
+ *  Collaboration:
+ *https://www.geeksforgeeks.org/cpp/if-memory-allocation-using-new-is-failed-in-c-then-how-it-should-be-handled/
  */
 #include <iostream>
 #include "BST.h"
@@ -7,58 +12,37 @@ using namespace std;
 
 int main()
 {
-
 	BST x = BST();
-	x.insert(500);
-	x.insert(600);
-	x.insert(300);
-	x.insert(450);
-	x.insert(520);
-	x.insert(14);
-	x.insert(555);
-	x.insert(10);
+	cout << "===Avoiding collision and inserting invalid values===" << endl;
+	x.insert(1);
 	x.insert(0);
-	x.insert(2);
-	x.insert(3);
-	x.insert(601);
-	x.insert(602);
-	x.insert(605);
-	x.insert(0);
-	x.insert(2359);
-	x.insert(2355);
+	x.insert(1860);
+	x.insert(1405);
+	x.insert(1410);
 	x.insert(9999);
-	x.insert(2566);
-	x.insert(5409);
+	x.insert(2357);
+	x.insert(1296);
+
+	cout << "\n===Copying X with the assignment operator===" << endl;
 	x.printSchedule();
-	x.printLevel();
+	BST y = x;
+	cout << "\n===Y after being assigned a copy of X===" << endl;
+	y.printSchedule();
 
-	BST y = BST(x);
+	cout << "\n===Removing values from Y===" << endl;
+	y.remove(1859);
+	y.remove(0);
+	y.remove(233339);
 
-	BST h = BST();
-	h.insert(10);
-	h.insert(20);
-	h.insert(30);
-	h.insert(40);
-	h.insert(50);
-	h.printLevel();
-		 //y.printSchedule();
-	//cout << y.root << endl;
-//	cout << "test" << endl;
-	
-
-	//x.printLevel();
-	//cout << x.root->getTimeString() << endl;
-	y.printLevel();
-	cout << x.root->right->left << endl;
-	cout << y.root->right->left << endl;
-//	cout << y.root->right->right << endl;
-	y.remove(500);
-	y.printLevel();
-	y.remove(3333);
-	//x.printSchedule();
-	//x.printLevel();
-	cout << x.root << endl;
-	cout << x.noe << endl;
-	cout << "Test" << endl;
+	cout << "\n===Copying Y with the copy constructor==" << endl;
+	y.printSchedule();
+	BST h = BST(y);
+	cout << "\n===H after using the copy constructor==" << endl;
+	h.printSchedule();
+	cout << "\n===Deleting all data in H===" << endl;
+	h.clearData();
+	h.printSchedule();
+	cout << "\n===The original Y remains the same===" << endl;
+	y.printSchedule();
 	return 0;
 }

@@ -1,10 +1,15 @@
+/*
+ *	Nicole Sirbu
+ *	CMPR-131
+ *	2025-11-12
+ *	Homework #4
+ *  Collaboration:
+ *https://www.geeksforgeeks.org/cpp/if-memory-allocation-using-new-is-failed-in-c-then-how-it-should-be-handled/
+ */
 #include "BST.h"
 #include <iostream>
-#include <ios>
-#include <vector>
-#include <numeric>
 using namespace std;
- Node* BST::null = new Node("null value");
+
 BST::BST()
 {
 	root = nullptr;
@@ -20,8 +25,7 @@ BST::~BST()
 BST::BST(const BST& other)
 {
 	noe = other.noe;
-	if (other.root) root = copyAll(other.root);
-	else root = nullptr;
+	root = copyAll(other.root);
 }
 
 /* Overloaded assignment operator */
@@ -31,9 +35,9 @@ BST& BST::operator=(const BST& other)
 	{
 		destroyTree(root);
 		noe = other.noe;
-		if (other.root) root = copyAll(other.root);
-		else root = nullptr;
+		root = copyAll(other.root);
 	}
+	else cout << "Attempting self-assignment!" << endl;
 	return *this;
 }
 
@@ -57,15 +61,16 @@ BST& BST::operator=(BST&& other) noexcept
 
 		other.root = nullptr;
 		other.noe = 0;
-
-	} else cout << "Attempting self-assignment!" << endl;
+	}
+	else cout << "Attempting self-assignment!" << endl;
 	return *this;
 }
 
 void BST::printSchedule() const
 {
 	cout << "\n===Scheduled Flight Times===" << endl;
-	printInOrder(root);
+	if (!root) cout << "No flights booked" << endl;
+	else printInOrder(root);
 	cout << "============================" << endl;
 	cout << "Total Flights: " << noe << endl;
 	cout << "============================" << endl;
@@ -79,14 +84,13 @@ void BST::printSchedule() const
 bool BST::insert(int landingTime)
 {
 	cout << "\nAdding landing time \"" << landingTime << "\"..." << endl;
-	int checkedTime = Node::verifyTime(landingTime);
-	if (checkedTime != landingTime) cout << "==>Invalid time adjusted from " << landingTime << " to " << checkedTime << endl;
+	int checkedTime = Time::verifyTime(landingTime);
 	return addNode(root, checkedTime);
 }
 
 bool BST::remove(int landingTime)
 {
-	cout << "\nRemoving landing time \"" << landingTime <<"\"..." << endl;
+	cout << "\nRemoving landing time \"" << landingTime << "\"..." << endl;
 	return removeNode(root, landingTime);
 }
 
@@ -94,7 +98,7 @@ bool BST::search(int landingTime) const
 {
 	cout << "\nSearching for landing time \"" << landingTime << "\"..." << endl;
 	Node* found = getNode(root, landingTime);
-	if (found) cout << "Time "<< found << " was successfully found!" << endl;
+	if (found) cout << "Time " << found << " was successfully found!" << endl;
 	else cout << "Time << " << landingTime << " was not found" << endl;
 	return found;
 }
@@ -103,6 +107,7 @@ void BST::clearData()
 {
 	destroyTree(root);
 	noe = 0;
+	root = nullptr;
 	cout << "Clearing all flights..." << endl;
 }
 
@@ -126,15 +131,16 @@ Node* BST::getNode(Node* rootNode, int toFind) const
 
 /* Private helper method for insert()
  * It is called when a collision is detected
- * It finds the minimum possible time from the collusion node
- * If the time is before noon, it looks for later time slots
- * If the time is after noon, it looks for earlier time slots */
-int BST::nextAvailable(int requestedTime, int collisionTime) const
+ * It finds the minimum possible time from the collusion node */
+int BST::nextAvailable(int requestedTime, Node* collisionTime) const
 {
-	if (requestedTime == 0) requestedTime = 2359;
-	int difference = 6 - abs(requestedTime - collisionTime);
-	if (requestedTime <= 2359 / 2) return Node::verifyTime(requestedTime + difference);
-	if (requestedTime >= 2359 / 2) return Node::verifyTime(requestedTime - difference);
+	int offset = Time::addTimes(collisionTime->date, 6);
+	if (offset == 2359)
+	{
+		Time temp = Time(0);
+		return Time::addTimes(temp, 6);
+	}
+	return offset;
 }
 
 /* Private helper method for insert() */
@@ -146,7 +152,8 @@ Node* BST::addNode(Node* rootNode, int addTime)
 		/* The nothrow argument with the new operator prevents
 		 * an error from being thrown if memory allocation fails
 		 * Instead, it sets the pointer to nullptr  */
-		if (Node* temp = new (nothrow) Node(addTime)) {
+		if (Node* temp = new(nothrow) Node(addTime))
+		{
 			root = temp;
 			noe = 1;
 			cout << "==>Flight booked successfully, root created" << endl;
@@ -158,37 +165,39 @@ Node* BST::addNode(Node* rootNode, int addTime)
 	if (!rootNode) return nullptr;
 
 	/* Traverse the tree to find a suitable spot to add the node */
-	int count = noe;
-	while (count >= 0)
+	while (rootNode)
 	{
 		/* Check each node visited for potential collisions */
-		if (std::abs(addTime - rootNode->time) <= 5)
+		if (Time::subtractTimes(addTime, rootNode->date) <= 5)
 		{
-			cout << "==>Flight collision detected! " << addTime << " is within 5 minutes of another flight at " << rootNode << endl;
-			/* Select the closest time and start inserting from the root */
-			int offset = nextAvailable(addTime, rootNode->time);
+			cout << "==>Flight collision detected! " << addTime << " is within 5 minutes of another flight at " <<
+				rootNode << endl;
+
+			/* If there is a collision, select the closest time and start inserting from the root */
+			int offset = nextAvailable(addTime, rootNode);
 			rootNode = root;
 			cout << "Attempting to book " << offset << " instead...\n" << endl;
 			return addNode(rootNode, offset);
 		}
 		// Go left if addTime is smaller than current
-		if (addTime < rootNode->time) {
+		if (addTime < rootNode->time)
+		{
 			if (!rootNode->left) break;
 			rootNode = rootNode->left;
 		}
 		// Go right if addTime is larger than current
-		else if (addTime > rootNode->time) {
+		else if (addTime > rootNode->time)
+		{
 			if (!rootNode->right) break;
 			rootNode = rootNode->right;
 		}
-		count--;
 	}
+
 	/* Once a valid spot is found, add the node there */
-	if (std::abs(addTime - rootNode->time) > 5)
+	if (Time::subtractTimes(addTime, rootNode->date) > 5)
 	{
-		if (Node* temp = new (nothrow) Node(addTime))
+		if (Node* temp = new(nothrow) Node(addTime))
 		{
-			cout << "Root node: " << rootNode << endl;
 			if (rootNode->time > addTime) rootNode->left = temp;
 			else rootNode->right = temp;
 			cout << "==>Flight time " << temp << " booked successfully" << endl;
@@ -196,7 +205,6 @@ Node* BST::addNode(Node* rootNode, int addTime)
 			return temp;
 		}
 		cout << "==>Error: Memory could not be allocated!" << endl;
-		return nullptr;
 	}
 	return nullptr;
 }
@@ -204,84 +212,50 @@ Node* BST::addNode(Node* rootNode, int addTime)
 /* Private helper method for remove() */
 Node* BST::getSmallest(Node* rootNode) const
 {
-	if (rootNode->left != nullptr) return getSmallest(rootNode->left);
+	if (rootNode->left) return getSmallest(rootNode->left);
 	return rootNode;
 }
 
 /* Private helper method for remove() */
 Node* BST::removeNode(Node* current, int removeValue)
 {
-	/* Base Case */
+	/* Case 1: Tree is empty or value wasn't found */
 	if (!current)
 	{
-		cout << "==>The specified time could not be found and removed" << endl;
+		if (!root) cout << "==>The tree is empty, nothing to remove" << endl;
+		else cout << "==>The specified time could not be found and removed" << endl;
 		return nullptr;
 	}
-
-	/* Case 1: Tree is empty */
-	if (!root)
-	{
-		cout << "==>The tree is empty, nothing to remove" << endl;
-		return nullptr;
-	}
-
-	/* Case 2: RemoveValue is stored in the root */
-	if (root->time == removeValue)
-	{
-		cout << "RemoveValue is stored in the root" << endl;
-		Node* toDelete = root;
-
-		/* Case 2A: Root contains a right child (and maybe a left child) */
-		if (Node* rightChild = toDelete->right)
-		{
-			//If there is also a left child, attach it to rightChild's leftmost node
-			if (Node* leftChild = toDelete->left) {
-				
-				Node* smallest = getSmallest(rightChild);
-				smallest->left = leftChild;
-			}
-			//Make right the new root
-			root = rightChild;
-		}
-
-		/* Case 2B: Root only contains a left child */
-		else if (root->left)
-		{
-			//Make left the new root
-			root = root->left;
-		}
-		cout << "==>The specified time was successfully removed, root node updated" << endl;
-		noe--;
-		delete toDelete;
-		return root;
-	}
-
-	/* Case 3: Current node contains removeValue */
+	/* Case 2: Current node contains removeValue */
 	if (current->time == removeValue)
 	{
 		Node* toDelete = current;
-		/* Case 3A: Contains right child (and maybe left) */
+		/* Case 2A: Contains right child (and maybe left) */
 		if (Node* rightChild = toDelete->right)
 		{
 			if (Node* leftChild = toDelete->left)
 			{
 				Node* smallest = getSmallest(rightChild);
-				cout << "Smallest node on the right is " << smallest << endl;
 				smallest->left = leftChild;
-				cout << smallest << "'s left is now " << leftChild << endl;
 			}
 			current = rightChild;
 		}
-		/* Case 3B: Only contains a left child */
+		/* Case 2B: Only contains a left child */
 		else if (Node* leftChild = toDelete->left) current = leftChild;
-		/* Case 3C: Current is a leaf so we set it to nullptr */
+			/* Case 2C: Current is a leaf so we set it to nullptr */
 		else current = nullptr;
-
+		/* Case 3D: Deleting the root */
+		if (root->time == removeValue)
+		{
+			root = current;
+			cout << "==>The specified time was successfully removed, root node updated" << endl;
+		}
+		else cout << "==>The specified time was found and removed" << endl;
 		noe--;
 		delete toDelete;
 		return current;
 	}
-	
+
 	//Go left if removeValue is smaller than current
 	if (removeValue < current->time)
 	{
@@ -290,7 +264,8 @@ Node* BST::removeNode(Node* current, int removeValue)
 	}
 
 	//Go right if removeValue is larger than current
-	if (removeValue > current->time) {
+	if (removeValue > current->time)
+	{
 		current->right = removeNode(current->right, removeValue);
 		return current;
 	}
@@ -299,14 +274,16 @@ Node* BST::removeNode(Node* current, int removeValue)
 /* Private helper method for the copy constructor and overloaded assignment operator */
 Node* BST::copyAll(const Node* otherRoot)
 {
-	if (!otherRoot) return nullptr;
-	if (Node* copy = new (nothrow) Node(otherRoot->time))
+	if (otherRoot)
 	{
-		copy->left = copyAll(otherRoot->left);
-		copy->right = copyAll(otherRoot->right);
-		return copy;
+		if (Node* copy = new(nothrow) Node(otherRoot->date.getTime()))
+		{
+			copy->left = copyAll(otherRoot->left);
+			copy->right = copyAll(otherRoot->right);
+			return copy;
+		}
+		cout << "==>Error: Memory could not be initialized" << endl;
 	}
-	cout << "==>Error: Memory could not be initialized" << endl;
 	return nullptr;
 }
 
@@ -319,98 +296,4 @@ void BST::destroyTree(Node* root)
 	destroyTree(root->right);
 
 	delete root;
-}
-
-void BST::levelOrderRec(Node* root2, int level, vector<vector<Node*>>& res) {
-	// Base case
-	//if (!root2) return;
- 	// Add a new level to the result if needed
-	//cout << "Adding" << endl;
-	if (level > 10) return;
-	/*if (root2)
-	{
-		null->left = root2->left;
-		null->right = root2->right;
-	} */
-	//if (!root2->left) root2->left = null;
-	//if (!root2->left) root2->right = null;
-	if (res.size() <= level)
-		res.push_back({});
-	
-	if (!root2)
-	{
-		//ll->left = null;
-		//ll->right = null;
-		cout << "adding null" << endl;
-		cout << null->left << " and " << null->right << endl;
-		res[level].push_back(null);
-		return;
-	}
-	else res[level].push_back(root2);
-	// Add current node's data to its corresponding level
-	
-
-	// Recur for left and right children
-	levelOrderRec(root2->left, level + 1, res);
-	levelOrderRec(root2->right, level + 1, res);
-}
-
-// Function to perform level order traversal
-vector<vector<Node*>> BST::levelOrder(Node* root2) {
-
-	// Stores the result level by level
-	vector<vector<Node*>> res;
-
-	levelOrderRec(root2, 0, res);
-	return res;
-}
-
-void BST::printLevel()
-{
-	cout << "\n===========================" << endl;
-	vector<vector<Node*>> res = levelOrder(root);
-	int height = (int) res.size() - 1;
-	int maxNodeCount = 0;
-	for (int i = 0; i < height; i++)
-	{
-		maxNodeCount += pow(2, i);
-	}
-	cout << "height: " << height << endl;
-	cout << "Max node count: " << maxNodeCount << endl;
-	for (int i = 0; i < height; i++) {
-
-	//	string spaceString((i + 1), ' ');
-	//	string s((height - i - (int) res[i].size()* (3)), ' ');
-		string s((height - i)*3, ' ');
-			//cout << s.size() << endl;
-				cout << i<< s;
-				string branches = s;
-			for (int k = 0; k < (int) (res[i].size()); k++)
-			{
-				if (!res[i][k] || res[i][k]->time == 9999)
-				{
-					cout << "  ";
-					//branches += "     ";
-				}
-				if (res[i][k]->time != 9999)
-				{
-					cout << res[i][k]->getTimeString() << "  ";
-					if (res[i][k]->left && res[i][k]->left->time != 9999)
-					{
-						branches += " /  ";
-					}
-					else branches += "    ";
-					if (res[i][k]->right &&  res[i][k]->right->time != 9999)
-					{
-						branches += "\\  ";
-					}
-					else branches += "   ";
-				}
-			
-			}
-			
-			cout << "\n" <<branches << endl;
-			
-		}
-		cout << "\n===========================" << endl;
 }

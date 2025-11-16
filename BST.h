@@ -1,99 +1,46 @@
-
+/*
+ *	Nicole Sirbu
+ *	CMPR-131
+ *	2025-11-12
+ *	Homework #4
+ *  Collaboration:
+ *https://www.geeksforgeeks.org/cpp/if-memory-allocation-using-new-is-failed-in-c-then-how-it-should-be-handled/
+ */
 #pragma once
 #ifndef BST_H
 #define BST_H
 #include <iostream>
 #include <ostream>
-#include <random>
 #include <string>
-#include <vector>
+#include "Time.h"
 using namespace std;
+class Time;
+
 struct Node
 {
+	Time date;
 	int time;
 	Node* left; //Less than parent
 	Node* right; //Greater than parent
 
 	Node(int landingTime)
 	{
-		time = landingTime;
+		date = Time(landingTime);
+		time = date.getTime();
 		left = nullptr;
 		right = nullptr;
 	}
-	Node(string s)
-	{
-		time = 9999;
-		left = nullptr;
-		right = nullptr;
-	}
-	/* Prevent setting nodes with invalid times
-	 * and will adjust the time as needed 
-	 * Ranges:
-		 * 0 <= hours <= 23
-		 * 0 <= minutes <= 59*/
 
-	/* Hours and minutes are rounded up or down separately
-	 * For example:
-		 * 24:15 - > 23:15
-		 * 9:99 - > 9:59
-	 * This is static because it will be used in the BST class
-	 * before creating nodes while checking for collisions */
-	static int verifyTime(int landingTime)
-	{
-		//Prevent negative values
-		landingTime = abs(landingTime);
-		return getHours(landingTime) * 100 + getMinutes(landingTime);
-	}
 	/* Returns the node's time as a string and pads numbers with zeroes
-	 * It doesn't use getHours() or getMinutes() since it doesn't
-	 * need to round/validate the time if the node was already created */
+	 * and uses the getTimeString method from the Time class */
 	string getTimeString() const
 	{
-		if (time == 9999) return "Xx:xX";
-		int temp = time;
-
-		int minutes = temp % 10;
-		temp /= 10;
-		minutes += (temp % 10) * 10;
-		temp /= 10;
-
-
-		int hours = temp % 10;
-		temp /= 10;
-		if (temp > 0) hours += temp % 10 * 10;
-
-		string padHours = (hours < 10) ? "0" : "";
-		string padMinutes = (minutes < 10) ? "0" : "";
-		return padHours + to_string(hours) + ":" + padMinutes + to_string(minutes);
+		return date.getTimeString();
 	}
 
 	void printTime() const
 	{
-		cout << "Landing Time: " << getTimeString() << endl;
-	}
-
-	/* Helper methods for validating hours and minutes */
-	 static int getMinutes(int landingTime)
-	{
-		//Get the first two digits
-		int minutes = landingTime % 10;
-		landingTime /= 10;
-		minutes += (landingTime % 10) * 10;
-
-		//Round down if minutes are over 59
-		return (minutes > 59) ? 59 : minutes;
-	}
-
-	static int getHours(int landingTime)
-	{
-		//Get the 3rd digit
-		landingTime /= 100;
-		int hours = landingTime % 10;
-		landingTime /= 10;
-		//Get the 4th digit if it exists
-		if (landingTime > 0) hours += landingTime % 10 * 10;
-		//Round down if hours are over 23
-		return (hours > 23) ? 23 : hours;
+		cout << "Landing Time: " << date.getTimeString() << endl;
 	}
 };
 
@@ -113,12 +60,10 @@ inline ostream& operator<<(ostream& out, const Node& other)
 
 class BST
 {
-
-
-public:
-	static Node* null;
 	Node* root;
 	int noe;
+
+public:
 	BST();
 	/*==The Big 5==*/
 	//Destructor
@@ -138,18 +83,15 @@ public:
 	bool remove(int landingTime);
 	void clearData();
 
-//private:
+private:
 	Node* printInOrder(Node* rootNode) const;
 	Node* getNode(Node* rootNode, int toFind) const;
-	int nextAvailable(int requestedTime, int collisionTime) const;
+	int nextAvailable(int requestedTime, Node* collisionTime) const;
 	Node* addNode(Node* rootNode, int addTime);
 	Node* getSmallest(Node* rootNode) const;
 	Node* removeNode(Node* current, int removeValue);
 	Node* copyAll(const Node* otherRoot);
 	void destroyTree(Node* rootNode);
-	void levelOrderRec(Node* root2, int level, vector<vector<Node*>>& res);
-	vector<vector<Node*>> levelOrder(Node* root2);
-	void printLevel();
 };
 
 #endif
